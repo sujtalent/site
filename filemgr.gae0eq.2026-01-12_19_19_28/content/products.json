@@ -1,0 +1,35 @@
+[
+  {
+    "id": "mucar-bt200",
+    "name": "Mucar BT200 Pro",
+    "price": 18000,
+    "priceText": "18 000 ₽",
+    "image": "product-mucar-bt200.webp",
+    "page": "product-mucar.html",
+    "short": "Компактный OBD2-сканер для базовой диагностики.<br/>Подходит для личного использования и автоподбора.",
+    "search": "mucar мукар bt200 bt200 pro obd obd2 сканер диагностика bluetooth android",
+    "action": "choose-config"
+  },
+  {
+    "id": "launch-pad9",
+    "name": "Launch X431 PAD 9",
+    "price": 42000,
+    "priceText": "от 42 000 ₽",
+    "image": "pad.webp",
+    "page": "product-pad9.html",
+    "short": "Профессиональная диагностика широкого парка авто.<br/>Поддержка легковых и коммерческих автомобилей.",
+    "search": "launch лаунч x431 pad 9 pad9 планшет сканер диагностика",
+    "action": "choose-config"
+  },
+  {
+    "id": "launch-hd",
+    "name": "Launch X-431 HD",
+    "price": 130000,
+    "priceText": "130 000 ₽",
+    "image": "product-launch-hd.webp",
+    "page": "product-hd.html",
+    "short": "Диагностика грузовых, автобусов и спецтехники.<br/>Поддержка 12/24В и современных протоколов.",
+    "search": "launch лаунч x431 hd heavy duty грузовые автобусы спецтехника 12v 24v",
+    "action": "add-direct"
+  }
+]

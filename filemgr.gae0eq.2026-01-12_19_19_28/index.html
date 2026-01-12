@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AUTO LAUNCH — Профессиональная диагностика LAUNCH</title>
+<link as="image" fetchpriority="high" href="hero-bg.webp" rel="preload"/>
+<link href="logo.webp" rel="icon" type="image/png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"></script>
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        html, body {
+            background-color: #1A1D21;
+            color: #F3F4F6;
+            overflow-x: hidden; /* prevent horizontal drag/scroll */
+        }
+        .hero-bg {
+            background: linear-gradient(135deg, rgba(26, 29, 33, 0.9), rgba(37, 41, 48, 0.8)), url('hero-bg.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 200, 150, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00C896, #00A884);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 200, 150, 0.4);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #00C896, #3B82F6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #00C896;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00C896;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Ensure hero headings and paragraphs wrap gracefully on small screens. */
+        .hero-bg h1, .hero-bg p {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.6s ease;
+        }
+        .dropdown {
+            transition: all 0.3s ease;
+            transform: translateY(-10px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* Невидимый "мостик" убирает зазор между кнопкой "Каталог" и меню (mt-2),
+           чтобы hover не выключался, пока ведёшь мышку вниз */
+        .dropdown::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: -10px;
+            height: 10px;
+        }
+        .dropdown.active {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+  /* FAQ on главной: smooth accordion + fully hidden when closed */
+  /* Browsers hide <details> content with display:none when [open] is removed.
+     Keep .faq-content rendered so max-height transition can animate on close. */
+  .faq-details > .faq-content{ display: block !important; }
+  .faq-details .faq-content{
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
+    transform: translateY(-4px);
+    transition: max-height .35s ease, opacity .22s ease, transform .22s ease, margin-top .22s ease;
+  }
+  .faq-details[open] .faq-content{
+    opacity: 1;
+    transform: translateY(0);
+    margin-top: 1rem !important; /* matches mt-4 */
+  }
+  /* Smooth close: keep [open] until height anim finishes, but fade content out immediately */
+  .faq-details.is-closing .faq-content{
+    opacity: 0;
+    transform: translateY(-4px);
+    margin-top: 0 !important;
+  }
+  /* Smooth close: during close animation we keep [open] until end, but fade content out */
+  .faq-details.is-closing .faq-content{
+    opacity: 0;
+    transform: translateY(-4px);
+    margin-top: 0 !important;
+  }
+        @media (max-width: 768px) {
+            .hero-bg {
+                background-attachment: scroll;
+            }
+        }
+
+/* Mobile overlay */
+.mobile-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+    z-index: 40;
+}
+.mobile-overlay.active{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Prevent background scroll when burger is open */
+body.menu-open{
+    overflow: hidden;
+}
+
+/* Mobile menu reveal animation (no max-height hacks) */
+.mobile-menu-panel{
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    overflow: hidden;
+    transition: grid-template-rows .28s ease, opacity .2s ease, transform .28s ease;
+}
+.mobile-menu-panel.open{
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.mobile-menu-inner{
+    overflow: hidden;
+}
+
+/* Mobile "Каталог" accordion (smooth push-down) */
+.mobile-catalog-submenu{
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-4px);
+    overflow: hidden;
+    transition: grid-template-rows .22s ease, opacity .2s ease, transform .22s ease;
+}
+.mobile-catalog-submenu-inner{
+    overflow: hidden;
+}
+.mobile-catalog.open .mobile-catalog-submenu{
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transform: translateY(0);
+}
+.mobile-catalog.open .mobile-catalog-toggle svg{
+    transform: rotate(180deg);
+}
+
+
+/* --- FIX: remove tap highlight / focus flash on mobile buttons --- */
+#mobile-menu-btn, .mobile-catalog-toggle, a, button{
+  -webkit-tap-highlight-color: transparent;
+}
+#mobile-menu-btn:focus, #mobile-menu-btn:active,
+.mobile-catalog-toggle:focus, .mobile-catalog-toggle:active,
+a:focus, a:active, button:focus, button:active{
+  outline: none !important;
+  box-shadow: none !important;
+}
+/* Keep accessibility for keyboard users */
+a:focus-visible, button:focus-visible{
+  outline: 2px solid rgba(0,200,150,.55);
+  outline-offset: 2px;
+}
+
+/* === FIX PACK: mobile header + hero buttons overflow + menu safe area === */
+@media (max-width: 480px){
+  nav.fixed > .max-w-6xl{
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  nav.fixed a.flex.items-center.space-x-3 .bg-gradient-to-br{
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+  }
+  nav.fixed a.flex.items-center.space-x-3 img{
+    width: 26px !important;
+    height: 26px !important;
+  }
+  /* prevent iOS/Android tap flash + ugly focus */
+  a, button{
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Mobile menu: keep contact block above system bars */
+  .mobile-menu-panel, .mobile-menu{
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Hero: keep content higher and make sure CTA buttons never overflow */
+  section.hero-bg{
+    padding-top: 64px !important; /* clears fixed nav but не уезжает вниз */
+  }
+  section.hero-bg > .max-w-6xl{
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .hero-buttons{
+    width: 100%;
+    align-items: stretch;
+  }
+  .hero-buttons a{
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Reduce hero heading and paragraph font sizes on very small screens to avoid overflow */
+  .hero-bg h1{
+    font-size: 1.75rem !important; /* around text-2xl */
+    line-height: 2.25rem !important;
+  }
+  .hero-bg p{
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  /* Reduce vertical spacing within hero on very small screens */
+  .hero-bg .space-y-8 > * + * {
+    margin-top: 1rem !important;
+  }
+  .hero-bg .space-y-4 > * + * {
+    margin-top: 0.75rem !important;
+  }
+}
+/* Hero buttons: never overflow viewport */
+.hero-buttons a{
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+
+
+
+/* ===== Tablet tweaks (768px–1024px) ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Use more screen width on tablets (Surface Pro etc.) */
+  .max-w-6xl, .max-w-5xl, .max-w-4xl, .max-w-3xl { max-width: 94vw !important; }
+  /* Reduce too-fat paddings that eat space */
+  .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .px-8 { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+
+  /* Tablet: avoid 3–4 columns that look cramped */
+  .md\:grid-cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .md\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  /* Slightly smaller hero headings on tablet */
+  .md\:text-5xl { font-size: 2.25rem !important; line-height: 2.5rem !important; }
+}
+</style>
+<meta content="Продажа и подбор диагностических сканеров LAUNCH и аксессуаров. Каталог, комплектации, консультация и поддержка." name="description"/><meta content="index,follow,max-image-preview:large" name="robots"/><meta content="AUTO LAUNCH" property="og:site_name"/><meta content="AUTO LAUNCH — Профессиональная диагностика LAUNCH" property="og:title"/><meta content="Продажа и подбор диагностических сканеров LAUNCH и аксессуаров. Каталог, комплектации, консультация и поддержка." property="og:description"/><meta content="ru_RU" property="og:locale"/><meta content="logo.webp" property="og:image"/><meta content="index.html" property="og:url"/><meta content="summary_large_image" name="twitter:card"/><meta content="AUTO LAUNCH — Профессиональная диагностика LAUNCH" name="twitter:title"/><meta content="Продажа и подбор диагностических сканеров LAUNCH и аксессуаров. Каталог, комплектации, консультация и поддержка." name="twitter:description"/><meta content="logo.webp" name="twitter:image"/><link href="index.html" rel="canonical"/><meta content="website" property="og:type"/><script data-seo-id="org" type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "AUTO LAUNCH",
+  "logo": "logo.webp"
+}</script></head>
+<body>
+<!-- Navigation -->
+<nav class="fixed top-0 w-full bg-[#1A1D21]/95 backdrop-blur-sm z-50 border-b border-[#374151]">
+<div class="max-w-6xl mx-auto px-4 py-3 md:px-6 md:py-4">
+<div class="flex items-center justify-between">
+<a aria-label="На главную" class="flex items-center space-x-3" href="index.html">
+<div class="bg-gradient-to-br from-[#00C896] to-[#3B82F6] flex items-center justify-center w-9 h-9 rounded-md md:w-10 md:h-10 md:rounded-lg">
+<img alt="Logo" class="rounded w-7 h-7 md:w-8 md:h-8" decoding="async" loading="lazy" src="logo.webp"/>
+</div>
+<div>
+<h1 class="font-bold text-white text-lg md:text-xl">AUTO LAUNCH</h1>
+<p class="text-gray-400 text-xs md:text-sm">Автодиагностика</p>
+</div>
+</a>
+<div class="hidden md:flex items-center space-x-8">
+<a class="nav-link text-[#00C896] font-medium" href="index.html" style="color:#00C896 !important;font-weight:600">Главная</a>
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896]" href="about.html">О компании</a>
+<div class="relative group">
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896] flex items-center space-x-1" href="catalog.html">
+<span>Каталог</span>
+<svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</a>
+<div class="dropdown absolute top-full left-0 mt-2 w-64 bg-[#252930] border border-[#374151] rounded-lg shadow-xl">
+<div class="py-2">
+<a class="block px-4 py-3 text-gray-300 hover:text-[#00C896] hover:bg-[#1A1D21] transition-colors" href="catalog.html#diagnostics">Автодиагностика</a>
+<a class="block px-4 py-3 text-gray-300 hover:text-[#00C896] hover:bg-[#1A1D21] transition-colors" href="licenses.html">Активация лицензий</a>
+</div>
+</div>
+</div>
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896]" href="knowledge.html">FAQ</a>
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896]" href="reviews.html">Отзывы</a>
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896]" href="contacts.html" style="color:#F3F4F6 !important">Контакты</a>
+</div>
+<div class="flex items-center space-x-4">
+<a aria-label="Корзина" class="relative bg-[#252930] rounded-lg hover:bg-[#2D343B] transition-colors p-1.5 md:p-2" href="cart.html">
+<svg class="w-5 h-5 text-[#F3F4F6]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5-6m0 0h15M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="absolute -top-2 -right-2 bg-[#00C896] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" id="cart-count">0</span>
+</a>
+<button aria-label="Открыть меню" class="md:hidden bg-[#252930] rounded-lg p-1.5 md:p-2" id="mobile-menu-btn">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<div class="md:hidden mt-2 pb-3 border-t border-[#374151] mobile-menu-panel" id="mobile-menu">
+<div class="mobile-menu-inner">
+<div class="flex flex-col space-y-3 pt-4">
+<a class="text-[#00C896] font-medium" href="index.html" style="color:#00C896 !important;font-weight:600">Главная</a>
+<a class="text-[#F3F4F6] hover:text-[#00C896]" href="about.html">О компании</a>
+<div class="mobile-catalog">
+<button aria-expanded="false" class="mobile-catalog-toggle text-[#F3F4F6] hover:text-[#00C896] flex items-center justify-between w-full" type="button">
+<span>Каталог</span>
+<svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<div class="mobile-catalog-submenu">
+<div class="mobile-catalog-submenu-inner">
+<a class="block pl-4 py-2 text-gray-300 hover:text-[#00C896]" href="catalog.html#diagnostics">Автодиагностика</a>
+<a class="block pl-4 py-2 text-gray-300 hover:text-[#00C896]" href="licenses.html">Активация лицензий</a>
+</div>
+</div>
+</div>
+<a class="text-[#F3F4F6] hover:text-[#00C896]" href="knowledge.html">FAQ</a>
+<a class="text-[#F3F4F6] hover:text-[#00C896]" href="reviews.html">Отзывы</a>
+<a class="text-[#F3F4F6] hover:text-[#00C896]" href="contacts.html" style="color:#F3F4F6 !important">Контакты</a>
+</div>
+<div class="mt-5 pt-5 border-t border-[#374151]">
+<p class="text-sm text-gray-400 mb-3">Связаться</p>
+<div class="flex items-center gap-3">
+<a class="inline-flex flex-1 justify-center items-center gap-2 px-3 py-2 bg-[#252930] rounded-lg text-[#F3F4F6] hover:text-[#00C896] hover:bg-[#2D343B] transition-colors" href="https://t.me/Evgenich84" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M9.993 15.726 9.83 19.3c.52 0 .745-.224 1.015-.493l2.435-2.31 5.043 3.69c.925.51 1.58.242 1.83-.86l3.317-15.52c.33-1.53-.56-2.13-1.46-1.78L1.11 9.18c-1.47.57-1.45 1.39-.27 1.75l5.87 1.83L19.82 5.7c.62-.41 1.18-.18.72.23z"></path></svg>
+<span class="text-sm font-medium">Telegram</span>
+</a>
+<a class="inline-flex flex-1 justify-center items-center gap-2 px-3 py-2 bg-[#252930] rounded-lg text-[#F3F4F6] hover:text-[#00C896] hover:bg-[#2D343B] transition-colors" href="https://wa.me/79155398255" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M20.52 3.48A11.8 11.8 0 0 0 12.06 0C5.49.02.14 5.38.16 11.95c0 2.1.55 4.15 1.6 5.96L0 24l6.26-1.7a11.9 11.9 0 0 0 5.78 1.47h.01c6.57 0 11.92-5.36 11.94-11.93a11.86 11.86 0 0 0-3.47-8.36ZM12.04 21.1h-.01a9.9 9.9 0 0 1-5.05-1.38l-.36-.21-3.71 1 .99-3.62-.23-.37a9.9 9.9 0 0 1-1.52-5.27C2.13 6.76 6.86 2.03 12.06 2.01c2.64 0 5.13 1.03 7 2.9a9.83 9.83 0 0 1 2.9 7c-.02 5.2-4.75 9.2-9.92 9.2Zm5.76-7.27c-.31-.16-1.86-.92-2.15-1.02-.29-.1-.5-.16-.71.16-.21.31-.81 1.02-1 1.23-.18.21-.36.23-.67.08-.31-.16-1.3-.48-2.47-1.53-.92-.82-1.54-1.84-1.72-2.15-.18-.31-.02-.48.14-.64.14-.14.31-.36.47-.54.16-.18.21-.31.31-.52.1-.21.05-.39-.02-.54-.08-.16-.71-1.7-.97-2.33-.26-.62-.53-.54-.71-.55h-.61c-.21 0-.54.08-.82.39-.29.31-1.08 1.06-1.08 2.58 0 1.52 1.11 2.99 1.26 3.2.16.21 2.18 3.33 5.29 4.67.74.32 1.31.51 1.76.65.74.24 1.41.21 1.94.13.59-.09 1.86-.76 2.13-1.49.26-.73.26-1.36.18-1.49-.08-.13-.29-.21-.6-.37Z"></path></svg>
+<span class="text-sm font-medium">WhatsApp</span>
+</a>
+</div>
+<a class="mt-3 inline-flex items-center justify-between w-full px-3 py-2 bg-[#252930] rounded-lg text-[#F3F4F6] hover:text-[#00C896] hover:bg-[#2D343B] transition-colors" href="tel:+79155398255">
+<span class="text-sm font-medium">+7 915 539‑82‑55</span>
+<span class="text-xs text-gray-400">Позвонить</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</nav>
+<div class="mobile-overlay" id="mobile-overlay"></div>
+<!-- Hero Section -->
+<section class="hero-bg lg:min-h-screen flex items-start lg:items-center pt-12 lg:pt-20">
+<div class="max-w-6xl mx-auto px-6 py-6 sm:py-14 lg:py-20">
+<div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+<div class="space-y-8">
+<div class="space-y-4">
+<div class="flex flex-wrap items-center gap-3 text-gray-300 mt-3">
+  <span class="text-xs sm:text-sm uppercase tracking-wider text-gray-400">Связаться:</span>
+  <a aria-label="Telegram" class="contact-icon w-9 h-9 rounded-lg bg-[#2D343B] text-white hover:text-[#00C896] flex items-center justify-center transition-colors" href="https://t.me/Evgenich84" rel="noreferrer" target="_blank">
+    <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 2 11 13"></path>
+      <path d="M22 2 15 22 11 13 2 9 22 2z"></path>
+    </svg>
+  </a>
+  <a aria-label="WhatsApp" class="contact-icon w-9 h-9 rounded-lg bg-[#2D343B] text-white hover:text-[#00C896] flex items-center justify-center transition-colors" href="https://wa.me/79155398255" rel="noreferrer" target="_blank">
+    <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 11.5a7.5 7.5 0 0 1-11.6 6.3L4 19l1.2-4.1A7.5 7.5 0 1 1 20 11.5z"></path>
+      <path d="M9.5 9.5c.2 1.3 1.8 2.9 3.1 3.1"></path>
+      <path d="M12.6 12.6l1.6-.6c.4-.1.9.1 1.1.5l.4.8"></path>
+    </svg>
+  </a>
+  <a class="text-sm sm:text-base text-gray-200 hover:text-[#00C896] font-semibold" href="tel:+79155398255">+7 915 539 8255</a>
+</div>
+
+<h1 class="text-4xl lg:text-6xl font-bold leading-tight">
+<span class="text-white">Профессиональная</span><br/>
+<span class="text-gradient" id="typed-text"></span><br/>
+<span class="text-white">LAUNCH</span>
+</h1>
+<p class="text-lg lg:text-xl text-gray-300 leading-relaxed">
+                            Оригинальные сканеры. Полный функционал. Поддержка и обучение.
+                        </p>
+</div>
+        <!-- Added hero-buttons class to ensure CTAs adapt on small screens -->
+        <div class="hero-buttons flex flex-col sm:flex-row gap-4">
+<a class="btn-primary px-6 py-4 rounded-lg text-white font-semibold text-center" href="catalog.html">
+                            Перейти в каталог
+                        </a>
+        <a class="px-6 py-4 rounded-lg border-2 border-[#00C896] text-[#00C896] font-semibold text-center hover:bg-[#00C896] hover:text-white transition-all" href="contacts.html" rel="noopener">Получить консультацию</a>
+</div>
+</div>
+<div class="hidden lg:block lg:pl-10">
+<div class="relative">
+<div class="absolute inset-0 bg-gradient-to-r from-[#00C896]/20 to-[#3B82F6]/20 rounded-2xl blur-xl"></div>
+<img alt="Автомобильная диагностика" class="relative rounded-2xl shadow-2xl w-full max-w-[560px] ml-auto" decoding="async" loading="lazy" src="hero-bg.webp"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Products Preview Section -->
+<section class="py-20 bg-[#1A1D21]">
+<div class="max-w-6xl mx-auto px-6">
+<div class="text-center mb-16 fade-in">
+<h2 class="text-4xl font-bold text-white mb-4">Популярные сканеры</h2>
+<p class="text-xl text-gray-400">Профессиональное оборудование для автомобильной диагностики</p>
+</div>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Mucar BT200 Pro -->
+<div class="card-hover bg-[#252930] rounded-xl border border-[#374151] overflow-hidden fade-in flex flex-col" onclick="window.location.href='product-mucar.html'">
+<div class="aspect-square bg-[#2D343B] flex items-center justify-center p-6">
+<img alt="Mucar BT200 Pro" class="max-w-full max-h-full object-contain" decoding="async" loading="lazy" src="product-mucar-bt200.webp"/>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-lg font-semibold text-white mb-2">Mucar BT200 Pro</h3>
+<p class="text-gray-400 text-sm mb-4">Диагностический сканер с поддержкой OBD2 и Bluetooth</p>
+<div class="flex items-center mt-auto">
+<span class="text-2xl font-bold text-[#00C896]">18 000 ₽</span>
+</div>
+</div>
+</div>
+<!-- Launch X431 PAD 9 -->
+<div class="card-hover bg-[#252930] rounded-xl border border-[#374151] overflow-hidden fade-in flex flex-col" onclick="window.location.href='product-pad9.html'">
+<div class="aspect-square bg-[#2D343B] flex items-center justify-center p-6">
+<img alt="Launch X431 PAD 9" class="max-w-full max-h-full object-contain" decoding="async" loading="lazy" src="launch-pad9-tablet.webp"/>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-lg font-semibold text-white mb-2">Launch X431 PAD 9</h3>
+<p class="text-gray-400 text-sm mb-4">Профессиональный диагностический сканер</p>
+<div class="flex items-center mt-auto">
+<span class="text-2xl font-bold text-[#00C896]">от 42 000 ₽</span>
+</div>
+</div>
+</div>
+<!-- Launch X-431 HD -->
+<div class="card-hover bg-[#252930] rounded-xl border border-[#374151] overflow-hidden fade-in flex flex-col" onclick="window.location.href='product-hd.html'">
+<div class="aspect-square bg-[#2D343B] flex items-center justify-center p-6">
+<img alt="Launch X-431 HD" class="max-w-full max-h-full object-contain" decoding="async" loading="lazy" src="product-launch-hd.webp"/>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-lg font-semibold text-white mb-2">Launch X-431 HD</h3>
+<p class="text-gray-400 text-sm mb-4">Для легковых и грузовых автомобилей</p>
+<div class="flex items-center mt-auto">
+<span class="text-2xl font-bold text-[#00C896]">130 000 ₽</span>
+</div>
+</div>
+</div>
+</div>
+<div class="text-center mt-12 fade-in">
+<a class="btn-primary px-8 py-4 rounded-lg text-white font-semibold inline-block" href="catalog.html">
+                    Смотреть весь каталог
+                </a>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-to-r from-[#00C896]/10 to-[#3B82F6]/10">
+<div class="max-w-4xl mx-auto px-6 text-center">
+<h2 class="text-4xl font-bold text-white mb-6 fade-in">Нужна консультация?</h2>
+<p class="text-xl text-gray-300 mb-8 fade-in">Наши специалисты помогут выбрать оптимальное решение для ваших задач</p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center fade-in">
+<a class="px-8 py-4 bg-[#25D366] text-white rounded-lg font-semibold hover:bg-[#1DA955] transition-colors flex items-center justify-center space-x-2" href="https://wa.me/79155398255">
+<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M20 11.5a7.5 7.5 0 0 1-11.6 6.3L4 19l1.2-4.1A7.5 7.5 0 1 1 20 11.5z"/>
+<path d="M9.5 9.5c.2 1.3 1.8 2.9 3.1 3.1"/>
+<path d="M12.6 12.6l1.6-.6c.4-.1.9.1 1.1.5l.4.8"/>
+</svg>
+<span>WhatsApp</span>
+</a>
+<a class="px-8 py-4 bg-[#0088CC] text-white rounded-lg font-semibold hover:bg-[#0077B3] transition-colors flex items-center justify-center space-x-2" href="https://t.me/Evgenich84">
+<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M22 2 11 13"/>
+<path d="M22 2 15 22 11 13 2 9 22 2z"/>
+</svg>
+<span>Telegram</span>
+</a>
+
+</div>
+</div>
+</section>
+<!-- Advantages Section -->
+<section class="py-20 bg-[#252930]">
+<div class="max-w-6xl mx-auto px-6">
+<div class="text-center mb-16 fade-in">
+<h2 class="text-4xl font-bold text-white mb-4">Почему выбирают нас</h2>
+<p class="text-xl text-gray-400">Профессиональный подход к автомобильной диагностике</p>
+</div>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+<div class="card-hover bg-[#2D343B] p-8 rounded-xl border border-[#374151] fade-in">
+<div class="w-12 h-12 bg-gradient-to-br from-[#00C896] to-[#00A884] rounded-lg flex items-center justify-center mb-6">
+<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-xl font-semibold text-white mb-3">Только оригинальное ПО</h3>
+<p class="text-gray-400">100% лицензионное программное обеспечение без блокировок и ограничений</p>
+</div>
+<div class="card-hover bg-[#2D343B] p-8 rounded-xl border border-[#374151] fade-in">
+<div class="w-12 h-12 bg-gradient-to-br from-[#3B82F6] to-[#2563EB] rounded-lg flex items-center justify-center mb-6">
+<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-xl font-semibold text-white mb-3">Без блокировок</h3>
+<p class="text-gray-400">Гарантированная работоспособность без внезапных блокировок устройств</p>
+</div>
+<div class="card-hover bg-[#2D343B] p-8 rounded-xl border border-[#374151] fade-in">
+<div class="w-12 h-12 bg-gradient-to-br from-[#00C896] to-[#00A884] rounded-lg flex items-center justify-center mb-6">
+<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-xl font-semibold text-white mb-3">Поддержка 700+ марок</h3>
+<p class="text-gray-400">Работа с автомобилями всех популярных марок и моделей</p>
+</div>
+<div class="card-hover bg-[#2D343B] p-8 rounded-xl border border-[#374151] fade-in">
+<div class="w-12 h-12 bg-gradient-to-br from-[#3B82F6] to-[#2563EB] rounded-lg flex items-center justify-center mb-6">
+<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-xl font-semibold text-white mb-3">Онлайн-кодирование</h3>
+<p class="text-gray-400">Возможность удалённого кодирования и программирования блоков управления</p>
+</div>
+<div class="card-hover bg-[#2D343B] p-8 rounded-xl border border-[#374151] fade-in">
+<div class="w-12 h-12 bg-gradient-to-br from-[#00C896] to-[#00A884] rounded-lg flex items-center justify-center mb-6">
+<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-xl font-semibold text-white mb-3">Для СТО и автоподбора</h3>
+<p class="text-gray-400">Оптимальное решение для автосервисов и специалистов по подбору автомобилей</p>
+</div>
+<div class="card-hover bg-[#2D343B] p-8 rounded-xl border border-[#374151] fade-in">
+<div class="w-12 h-12 bg-gradient-to-br from-[#3B82F6] to-[#2563EB] rounded-lg flex items-center justify-center mb-6">
+<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-xl font-semibold text-white mb-3">Техническая поддержка</h3>
+<p class="text-gray-400">Консультации, обучение и помощь в эксплуатации оборудования</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Reviews -->
+<section class="py-20 bg-[#252930]" id="reviews">
+<div class="max-w-6xl mx-auto px-6">
+<div class="flex items-end justify-between gap-6 flex-wrap mb-12">
+<div class="space-y-3">
+<h2 class="text-3xl lg:text-4xl font-bold text-white">Отзывы клиентов</h2>
+<p class="text-gray-300 max-w-2xl">Честные отзывы от тех, кто уже купил сканер или активировал лицензии.</p>
+</div>
+<a class="px-5 py-3 rounded-lg border border-[#374151] text-gray-200 hover:text-white hover:border-[#00C896] transition-colors" href="reviews.html">
+        Смотреть все отзывы
+      </a>
+</div>
+<div class="grid md:grid-cols-3 gap-6">
+<div class="p-6 rounded-2xl bg-[#1A1D21] border border-[#374151]">
+<div class="flex items-center gap-1 mb-4 text-[#00C896]">
+<span>★★★★★</span>
+</div>
+<p class="text-gray-300 leading-relaxed">«PAD 9 пришёл быстро, всё оригинал. По настройке подсказали, лицензии активировали без плясок. Респект.»</p>
+<div class="mt-5 text-sm text-gray-400">Алексей • Автосервис</div>
+</div>
+<div class="p-6 rounded-2xl bg-[#1A1D21] border border-[#374151]">
+<div class="flex items-center gap-1 mb-4 text-[#00C896]">
+<span>★★★★★</span>
+</div>
+<p class="text-gray-300 leading-relaxed">«Брал MUСAR для личной машины — диагностирует нормально, ошибки читает, живые параметры показывает. Для своей цены топ.»</p>
+<div class="mt-5 text-sm text-gray-400">Дмитрий • Частный мастер</div>
+</div>
+<div class="p-6 rounded-2xl bg-[#1A1D21] border border-[#374151]">
+<div class="flex items-center gap-1 mb-4 text-[#00C896]">
+<span>★★★★★</span>
+</div>
+<p class="text-gray-300 leading-relaxed">«Продлили подписку быстро, без мутных схем. Всё объяснили по-человечески, поддержка на связи.»</p>
+<div class="mt-5 text-sm text-gray-400">Илья • Автоподбор</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ -->
+<section class="py-20 bg-[#1A1D21]" id="faq">
+<div class="max-w-6xl mx-auto px-6">
+<div class="space-y-3 mb-10">
+<h2 class="text-3xl lg:text-4xl font-bold text-white">Часто задаваемые вопросы</h2>
+<p class="text-gray-300 max-w-2xl">Мы подготовили ответы на наиболее частые вопросы, чтобы сэкономить ваше время и упростить выбор.</p>
+</div>
+<div class="space-y-4"><details class="faq-details group p-6 rounded-2xl bg-[#252930] border border-[#374151]"><summary class="cursor-pointer list-none flex items-center justify-between gap-4"><span class="text-white font-semibold">Что такое диагностические сканеры Launch и для чего они нужны?</span><span class="text-gray-400 group-open:rotate-180 transition-transform">⌄</span></summary><div class="faq-content mt-4 text-gray-300 leading-relaxed">Диагностические сканеры Launch — это профессиональные устройства для чтения и сброса ошибок, анализа параметров автомобиля в реальном времени, выполнения сервисных функций и адаптаций. Они используются как в автосервисах, так и для личного пользования.</div></details><details class="faq-details group p-6 rounded-2xl bg-[#252930] border border-[#374151]"><summary class="cursor-pointer list-none flex items-center justify-between gap-4"><span class="text-white font-semibold">Подойдут ли ваши диагностические устройства для моего автомобиля?</span><span class="text-gray-400 group-open:rotate-180 transition-transform">⌄</span></summary><div class="faq-content mt-4 text-gray-300 leading-relaxed">Большинство представленных сканеров поддерживают широкий список марок и моделей автомобилей, включая европейские, японские, корейские и китайские авто. Перед покупкой вы всегда можете уточнить совместимость — мы поможем подобрать оптимальный вариант.</div></details><details class="faq-details group p-6 rounded-2xl bg-[#252930] border border-[#374151]"><summary class="cursor-pointer list-none flex items-center justify-between gap-4"><span class="text-white font-semibold">В чем разница между бюджетными и профессиональными диагностическими приборами?</span><span class="text-gray-400 group-open:rotate-180 transition-transform">⌄</span></summary><div class="faq-content mt-4 text-gray-300 leading-relaxed">Бюджетные устройства подходят для базовой диагностики: чтения и сброса ошибок. Профессиональные сканеры имеют расширенный функционал — кодирование блоков, адаптации, специальные сервисные процедуры и более глубокий доступ к системам автомобиля.</div></details><details class="faq-details group p-6 rounded-2xl bg-[#252930] border border-[#374151]"><summary class="cursor-pointer list-none flex items-center justify-between gap-4"><span class="text-white font-semibold">Нужно ли обновлять диагностический сканер и как это происходит?</span><span class="text-gray-400 group-open:rotate-180 transition-transform">⌄</span></summary><div class="faq-content mt-4 text-gray-300 leading-relaxed">Да, обновления необходимы для поддержки новых автомобилей и функций. Обновление выполняется через интернет — обычно через Wi‑Fi или приложение производителя. Мы консультируем по обновлениям и при необходимости помогаем с активацией лицензий.</div></details><details class="faq-details group p-6 rounded-2xl bg-[#252930] border border-[#374151]"><summary class="cursor-pointer list-none flex items-center justify-between gap-4"><span class="text-white font-semibold">Подходит ли диагностический сканер для самостоятельного использования, если я не автосервис?</span><span class="text-gray-400 group-open:rotate-180 transition-transform">⌄</span></summary><div class="faq-content mt-4 text-gray-300 leading-relaxed">Да. Многие модели разработаны с простым и понятным интерфейсом, поэтому подходят для личного использования. При этом они сохраняют профессиональные возможности, которые могут понадобиться в будущем.</div></details><details class="faq-details group p-6 rounded-2xl bg-[#252930] border border-[#374151]"><summary class="cursor-pointer list-none flex items-center justify-between gap-4"><span class="text-white font-semibold">Предоставляете ли вы поддержку после покупки?</span><span class="text-gray-400 group-open:rotate-180 transition-transform">⌄</span></summary><div class="faq-content mt-4 text-gray-300 leading-relaxed">Да. Мы сопровождаем клиентов после покупки: помогаем с настройкой, обновлениями, активацией и разъяснением функций устройства. Вы всегда можете обратиться за консультацией.</div></details></div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-[#252930] py-12 border-t border-[#374151]">
+<div class="max-w-6xl mx-auto px-6">
+<div class="text-center">
+<div class="flex items-center justify-center space-x-3 mb-4">
+<div class="w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center">
+<img alt="AUTO LAUNCH" class="w-full h-full object-contain" decoding="async" loading="lazy" src="logo-footer.webp"/>
+</div>
+<div>
+<h3 class="text-xl font-bold text-white">AUTO LAUNCH</h3>
+</div>
+</div>
+<p class="text-gray-400 mb-6">Профессиональная диагностика автомобилей LAUNCH</p><p class="text-gray-400 mb-2">Телефон/WhatsApp: +7 915 539 8255</p><p class="text-gray-400 mb-6">Email: auto-launch@mail.ru</p>
+<div class="border-t border-[#374151] pt-6">
+<p class="text-gray-500 text-sm">© 2025 AUTO LAUNCH. Все права защищены.</p>
+</div>
+</div>
+</div>
+</footer>
+<script defer="" src="main.js"></script>
+</body>
+</html>

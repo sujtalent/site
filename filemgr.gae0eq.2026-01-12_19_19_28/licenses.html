@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AUTO LAUNCH — Активация лицензий — AUTO LAUNCH</title>
+<link href="logo.webp" rel="icon" type="image/png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* Dropdown (Каталог) */
+  .dropdown {
+    transition: all 0.3s ease;
+    transform: translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .dropdown::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10px;
+    height: 10px;
+  }
+  .dropdown.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+
+/* Mobile overlay */
+.mobile-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+    z-index: 40;
+}
+.mobile-overlay.active{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Prevent background scroll when burger is open */
+body.menu-open{
+    overflow: hidden;
+}
+
+/* Mobile menu reveal animation (no max-height hacks) */
+.mobile-menu-panel{
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    overflow: hidden;
+    transition: grid-template-rows .28s ease, opacity .2s ease, transform .28s ease;
+}
+.mobile-menu-panel.open{
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.mobile-menu-inner{
+    overflow: hidden;
+}
+
+/* Mobile "Каталог" accordion (smooth push-down) */
+.mobile-catalog-submenu{
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-4px);
+    overflow: hidden;
+    transition: grid-template-rows .22s ease, opacity .2s ease, transform .22s ease;
+}
+.mobile-catalog-submenu-inner{
+    overflow: hidden;
+}
+.mobile-catalog.open .mobile-catalog-submenu{
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transform: translateY(0);
+}
+.mobile-catalog.open .mobile-catalog-toggle svg{
+    transform: rotate(180deg);
+}
+
+
+/* --- FIX: remove tap highlight / focus flash on mobile buttons --- */
+#mobile-menu-btn, .mobile-catalog-toggle, a, button{
+  -webkit-tap-highlight-color: transparent;
+}
+#mobile-menu-btn:focus, #mobile-menu-btn:active,
+.mobile-catalog-toggle:focus, .mobile-catalog-toggle:active,
+a:focus, a:active, button:focus, button:active{
+  outline: none !important;
+  box-shadow: none !important;
+}
+/* Keep accessibility for keyboard users */
+a:focus-visible, button:focus-visible{
+  outline: 2px solid rgba(0,200,150,.55);
+  outline-offset: 2px;
+}
+
+/* === FIX PACK: mobile header + hero buttons overflow + menu safe area === */
+@media (max-width: 480px){
+  nav.fixed > .max-w-6xl{
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  nav.fixed a.flex.items-center.space-x-3 .bg-gradient-to-br{
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+  }
+  nav.fixed a.flex.items-center.space-x-3 img{
+    width: 26px !important;
+    height: 26px !important;
+  }
+  /* prevent iOS/Android tap flash + ugly focus */
+  a, button{
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Mobile menu: keep contact block above system bars */
+  .mobile-menu-panel, .mobile-menu{
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Hero: keep content higher and make sure CTA buttons never overflow */
+  section.hero-bg{
+    padding-top: 64px !important; /* clears fixed nav but не уезжает вниз */
+  }
+  section.hero-bg > .max-w-6xl{
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .hero-buttons{
+    width: 100%;
+    align-items: stretch;
+  }
+  .hero-buttons a{
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+/* Hero buttons: never overflow viewport */
+.hero-buttons a{
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+
+
+
+/* ===== Tablet tweaks (768px–1024px) ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Use more screen width on tablets (Surface Pro etc.) */
+  .max-w-6xl, .max-w-5xl, .max-w-4xl, .max-w-3xl { max-width: 94vw !important; }
+  /* Reduce too-fat paddings that eat space */
+  .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .px-8 { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+
+  /* Tablet: avoid 3–4 columns that look cramped */
+  .md\:grid-cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .md\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  /* Slightly smaller hero headings on tablet */
+  .md\:text-5xl { font-size: 2.25rem !important; line-height: 2.5rem !important; }
+}
+</style>
+<meta content="Активация и обновление лицензий для диагностических приборов. Поможем открыть новые функции и поддержку свежих авто." name="description"/><meta content="index,follow,max-image-preview:large" name="robots"/><meta content="AUTO LAUNCH" property="og:site_name"/><meta content="AUTO LAUNCH — Активация лицензий — AUTO LAUNCH" property="og:title"/><meta content="Активация и обновление лицензий для диагностических приборов. Поможем открыть новые функции и поддержку свежих авто." property="og:description"/><meta content="ru_RU" property="og:locale"/><meta content="logo.webp" property="og:image"/><meta content="licenses.html" property="og:url"/><meta content="summary_large_image" name="twitter:card"/><meta content="AUTO LAUNCH — Активация лицензий — AUTO LAUNCH" name="twitter:title"/><meta content="Активация и обновление лицензий для диагностических приборов. Поможем открыть новые функции и поддержку свежих авто." name="twitter:description"/><meta content="logo.webp" name="twitter:image"/><link href="licenses.html" rel="canonical"/><meta content="website" property="og:type"/><script data-seo-id="org" type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "AUTO LAUNCH",
+  "logo": "logo.webp"
+}</script></head>
+<body class="bg-[#0f1318] text-white"><nav class="fixed top-0 w-full bg-[#1A1D21]/95 backdrop-blur-sm z-50 border-b border-[#374151]">
+<div class="max-w-6xl mx-auto px-4 py-3 md:px-6 md:py-4">
+<div class="flex items-center justify-between">
+<a aria-label="На главную" class="flex items-center space-x-3" href="index.html">
+<div class="bg-gradient-to-br from-[#00C896] to-[#3B82F6] flex items-center justify-center w-9 h-9 rounded-md md:w-10 md:h-10 md:rounded-lg">
+<img alt="Logo" class="rounded w-7 h-7 md:w-8 md:h-8" decoding="async" loading="lazy" src="logo.webp"/>
+</div>
+<div>
+<h1 class="font-bold text-white text-lg md:text-xl">AUTO LAUNCH</h1>
+<p class="text-gray-400 text-xs md:text-sm">Автодиагностика</p>
+</div>
+</a>
+<div class="hidden md:flex items-center space-x-8">
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896]" href="index.html">Главная</a>
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896]" href="about.html">О компании</a>
+<div class="relative group">
+<a class="nav-link text-[#00C896] flex items-center space-x-1" href="catalog.html">
+<span>Каталог</span>
+<svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</a>
+<div class="dropdown absolute top-full left-0 mt-2 w-64 bg-[#252930] border border-[#374151] rounded-lg shadow-xl">
+<div class="py-2">
+<a class="block px-4 py-3 text-gray-300 hover:text-[#00C896] hover:bg-[#1A1D21] transition-colors" href="catalog.html#diagnostics">Автодиагностика</a>
+<a class="block px-4 py-3 text-gray-300 hover:text-[#00C896] hover:bg-[#1A1D21] transition-colors" href="licenses.html">Активация лицензий</a>
+</div>
+</div>
+</div>
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896]" href="knowledge.html">FAQ</a>
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896]" href="reviews.html">Отзывы</a>
+<a class="nav-link text-[#F3F4F6] hover:text-[#00C896]" href="contacts.html">Контакты</a>
+</div>
+<div class="flex items-center space-x-4">
+<a aria-label="Корзина" class="relative bg-[#252930] rounded-lg hover:bg-[#2D343B] transition-colors p-1.5 md:p-2" href="cart.html">
+<svg class="w-5 h-5 text-[#F3F4F6]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5-6m0 0h15M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="absolute -top-2 -right-2 bg-[#00C896] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" id="cart-count">0</span>
+</a>
+<button aria-label="Открыть меню" class="md:hidden bg-[#252930] rounded-lg p-1.5 md:p-2" id="mobile-menu-btn">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<div class="md:hidden mt-2 pb-3 border-t border-[#374151] mobile-menu-panel" id="mobile-menu">
+<div class="mobile-menu-inner">
+<div class="flex flex-col space-y-3 pt-4">
+<a class="text-[#F3F4F6] hover:text-[#00C896]" href="index.html">Главная</a><a class="text-[#F3F4F6] hover:text-[#00C896]" href="about.html">О компании</a><div class="mobile-catalog">
+<button aria-expanded="false" class="mobile-catalog-toggle text-[#00C896] flex items-center justify-between w-full" type="button">
+<span>Каталог</span>
+<svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<div class="mobile-catalog-submenu">
+<div class="mobile-catalog-submenu-inner">
+<a class="block pl-4 py-2 text-gray-300 hover:text-[#00C896]" href="catalog.html#diagnostics">Автодиагностика</a>
+<a class="block pl-4 py-2 text-gray-300 hover:text-[#00C896]" href="licenses.html">Активация лицензий</a>
+</div>
+</div>
+</div><a class="text-[#F3F4F6] hover:text-[#00C896]" href="knowledge.html">FAQ</a><a class="text-[#F3F4F6] hover:text-[#00C896]" href="reviews.html">Отзывы</a><a class="text-[#F3F4F6] hover:text-[#00C896]" href="contacts.html">Контакты</a>
+</div>
+<div class="mt-5 pt-5 border-t border-[#374151]">
+<p class="text-sm text-gray-400 mb-3">Связаться</p>
+<div class="flex items-center gap-3">
+<a class="inline-flex flex-1 justify-center items-center gap-2 px-3 py-2 bg-[#252930] rounded-lg text-[#F3F4F6] hover:text-[#00C896] hover:bg-[#2D343B] transition-colors" href="https://t.me/Evgenich84" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M9.993 15.726 9.83 19.3c.52 0 .745-.224 1.015-.493l2.435-2.31 5.043 3.69c.925.51 1.58.242 1.83-.86l3.317-15.52c.33-1.53-.56-2.13-1.46-1.78L1.11 9.18c-1.47.57-1.45 1.39-.27 1.75l5.87 1.83L19.82 5.7c.62-.41 1.18-.18.72.23z"></path></svg>
+<span class="text-sm font-medium">Telegram</span>
+</a>
+<a class="inline-flex flex-1 justify-center items-center gap-2 px-3 py-2 bg-[#252930] rounded-lg text-[#F3F4F6] hover:text-[#00C896] hover:bg-[#2D343B] transition-colors" href="https://wa.me/79155398255" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M20.52 3.48A11.8 11.8 0 0 0 12.06 0C5.49.02.14 5.38.16 11.95c0 2.1.55 4.15 1.6 5.96L0 24l6.26-1.7a11.9 11.9 0 0 0 5.78 1.47h.01c6.57 0 11.92-5.36 11.94-11.93a11.86 11.86 0 0 0-3.47-8.36ZM12.04 21.1h-.01a9.9 9.9 0 0 1-5.05-1.38l-.36-.21-3.71 1 .99-3.62-.23-.37a9.9 9.9 0 0 1-1.52-5.27C2.13 6.76 6.86 2.03 12.06 2.01c2.64 0 5.13 1.03 7 2.9a9.83 9.83 0 0 1 2.9 7c-.02 5.2-4.75 9.2-9.92 9.2Zm5.76-7.27c-.31-.16-1.86-.92-2.15-1.02-.29-.1-.5-.16-.71.16-.21.31-.81 1.02-1 1.23-.18.21-.36.23-.67.08-.31-.16-1.3-.48-2.47-1.53-.92-.82-1.54-1.84-1.72-2.15-.18-.31-.02-.48.14-.64.14-.14.31-.36.47-.54.16-.18.21-.31.31-.52.1-.21.05-.39-.02-.54-.08-.16-.71-1.7-.97-2.33-.26-.62-.53-.54-.71-.55h-.61c-.21 0-.54.08-.82.39-.29.31-1.08 1.06-1.08 2.58 0 1.52 1.11 2.99 1.26 3.2.16.21 2.18 3.33 5.29 4.67.74.32 1.31.51 1.76.65.74.24 1.41.21 1.94.13.59-.09 1.86-.76 2.13-1.49.26-.73.26-1.36.18-1.49-.08-.13-.29-.21-.6-.37Z"></path></svg>
+<span class="text-sm font-medium">WhatsApp</span>
+</a>
+</div>
+<a class="mt-3 inline-flex items-center justify-between w-full px-3 py-2 bg-[#252930] rounded-lg text-[#F3F4F6] hover:text-[#00C896] hover:bg-[#2D343B] transition-colors" href="tel:+79155398255">
+<span class="text-sm font-medium">+7 915 539‑82‑55</span>
+<span class="text-xs text-gray-400">Позвонить</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</nav>
+<div class="mobile-overlay" id="mobile-overlay"></div>
+<!-- фикс: nav fixed сверху, поэтому даём честный отступ сверху, чтобы заголовок не залезал под шапку -->
+<main class="max-w-5xl mx-auto px-6 pt-28 pb-14">
+<div class="mb-10">
+<h1 class="text-4xl font-bold">Активация лицензий</h1>
+<p class="text-white/70 mt-3">Поможем активировать/продлить лицензии LAUNCH, Diagzone и другие решения. Оставьте заявку — уточним модель прибора, регион и подберём оптимальный вариант.</p>
+</div>
+<div class="grid md:grid-cols-2 gap-8">
+<section class="bg-white/5 border border-white/10 rounded-2xl p-6">
+<h2 class="text-xl font-semibold mb-3">Что можно сделать</h2>
+<ul class="space-y-2 text-white/80">
+<li>• Активация / продление подписки</li>
+<li>• Восстановление доступа к аккаунту</li>
+<li>• Подбор лицензии под вашу комплектацию</li>
+<li>• Проверка совместимости (CAN FD / DoIP и т.д.)</li>
+</ul>
+<div class="mt-6 text-white/60 text-sm">Внимание: итог зависит от конкретной модели/серийника и региона. Перед оплатой всё подтвердим.</div>
+</section>
+<section class="bg-white/5 border border-white/10 rounded-2xl p-6">
+<h2 class="text-xl font-semibold mb-4">Заявка</h2>
+<form class="space-y-4" id="licenseForm">
+<div>
+<label class="block text-sm text-white/70 mb-1">Имя</label>
+<input class="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 outline-none" name="name" placeholder="Как к вам обращаться" required=""/>
+</div>
+<div>
+<label class="block text-sm text-white/70 mb-1">Телефон (Россия)</label>
+<input autocomplete="tel" class="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 outline-none" id="phone" inputmode="tel" name="phone" placeholder="+7 999 999-99-99" required=""/>
+<p class="mt-2 text-sm text-red-400 hidden" id="phone-error">Введите реальный номер РФ: +7 999 999-99-99</p>
+</div>
+<div>
+<label class="block text-sm text-white/70 mb-1">Предпочтительный способ связи</label>
+<select class="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 outline-none" name="method">
+<option>Звонок</option>
+<option>Telegram</option>
+<option>WhatsApp</option>
+</select>
+</div>
+<div>
+<label class="block text-sm text-white/70 mb-1">Комментарий</label>
+<textarea class="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 outline-none" name="message" placeholder="Модель прибора, что нужно активировать, срок, регион (если знаете)" rows="4"></textarea>
+</div>
+<button class="w-full rounded-xl bg-[#00C896] text-black font-semibold py-3">Отправить заявку</button>
+<p class="text-xs text-white/50">Все заявки обрабатываются индивидуально. Перед выполнением работ мы обязательно подтверждаем детали и согласовываем условия.</p>
+</form>
+</section>
+</div>
+</main>
+<script>
+(function(){
+  const form = document.getElementById('licenseForm');
+  if(!form) return;
+
+  const FORM_STARTED_AT = Date.now();
+
+  function digitsOnly(v){ return (v || '').toString().replace(/\D/g,''); }
+
+  function normalizeRuPhone(input){
+    let d = digitsOnly(input);
+    // 10 digits like 9XXXXXXXXX -> assume RU and prefix 7
+    if (d.length === 10 && d[0] === '9') d = '7' + d;
+    // 11 digits starting with 8 -> replace with 7
+    if (d.length === 11 && d[0] === '8') d = '7' + d.slice(1);
+    // clamp to 11 digits
+    if (d.length > 11) d = d.slice(0,11);
+    return d;
+  }
+
+  function looksFakeSequence(d){
+    if (!d) return false;
+    // all same digits
+    if (/^(\d)\1{10}$/.test(d)) return true;
+    // simple ascending / descending
+    const asc = '01234567890123456789';
+    const desc = '98765432109876543210';
+    if (asc.includes(d) || desc.includes(d)) return true;
+    return false;
+  }
+
+  function isValidRuPhone(input){
+    const d = normalizeRuPhone(input);
+    if (d.length !== 11) return false;
+    if (d[0] !== '7') return false;
+    if (d[1] === '0') return false;
+    if (looksFakeSequence(d)) return false;
+    return true;
+  }
+
+  function formatRuPhone(input){
+    const d = normalizeRuPhone(input);
+    if (!d) return '';
+    if (d === '7') return ''; // allow full clear
+    let out = '+7';
+    const p = d.slice(1);
+    if (p.length > 0) out += ' ' + p.slice(0,3);
+    if (p.length > 3) out += ' ' + p.slice(3,6);
+    if (p.length > 6) out += '-' + p.slice(6,8);
+    if (p.length > 8) out += '-' + p.slice(8,10);
+    return out;
+  }
+
+  function setPhoneError(ok){
+    const el = document.getElementById('phone-error');
+    const phoneInput = document.getElementById('phone');
+    if (!el || !phoneInput) return;
+    if (ok) {
+      el.classList.add('hidden');
+      phoneInput.classList.remove('border-red-500');
+    } else {
+      el.classList.remove('hidden');
+      phoneInput.classList.add('border-red-500');
+    }
+  }
+
+  function checkValidity(){
+    const phoneInput = document.getElementById('phone');
+    const submitBtn = form.querySelector('button[type="submit"], button:not([type])');
+    const okPhone = phoneInput ? isValidRuPhone(phoneInput.value) : false;
+    setPhoneError(okPhone || (phoneInput && phoneInput.value.trim()===''));
+    if (submitBtn) {
+      submitBtn.disabled = !okPhone;
+      submitBtn.classList.toggle('opacity-50', !okPhone);
+      submitBtn.classList.toggle('cursor-not-allowed', !okPhone);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+      phoneInput.addEventListener('input', (e) => {
+        e.target.value = formatRuPhone(e.target.value);
+        checkValidity();
+      });
+      phoneInput.addEventListener('blur', () => checkValidity());
+    }
+    checkValidity();
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const phoneInput = document.getElementById('phone');
+    if (!phoneInput || !isValidRuPhone(phoneInput.value)) {
+      setPhoneError(false);
+      return;
+    }
+
+    // very small anti-bot: too fast submit
+    if (Date.now() - FORM_STARTED_AT < 1200) return;
+
+    // Here you can hook Telegram/CRM later.
+    // For now: show user confirmation.
+    const successText = '✅ Заявка отправлена. Мы свяжемся с вами в ближайшее время.';
+    let box = document.getElementById('form-success');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'form-success';
+      box.className = 'mt-4 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm';
+      form.appendChild(box);
+    }
+    box.textContent = successText;
+
+    form.reset();
+    checkValidity();
+  });
+})();
+</script>
+<footer class="bg-[#252930] py-12 border-t border-[#374151]">
+<div class="max-w-6xl mx-auto px-6">
+<div class="text-center">
+<div class="flex items-center justify-center space-x-3 mb-4">
+<div class="w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center">
+<img alt="AUTO LAUNCH" class="w-full h-full object-contain" decoding="async" loading="lazy" src="logo-footer.webp"/>
+</div>
+<div>
+<h3 class="text-xl font-bold text-white">AUTO LAUNCH</h3>
+</div>
+</div>
+<p class="text-gray-400 mb-6">Профессиональная диагностика автомобилей LAUNCH</p><p class="text-gray-400 mb-2">Телефон/WhatsApp: +7 915 539 8255</p><p class="text-gray-400 mb-6">Email: auto-launch@mail.ru</p>
+<div class="border-t border-[#374151] pt-6">
+<p class="text-gray-500 text-sm">© 2025 AUTO LAUNCH. Все права защищены.</p>
+</div>
+</div>
+</div>
+</footer>
+<script defer="" src="main.js"></script>
+</body>
+</html>
