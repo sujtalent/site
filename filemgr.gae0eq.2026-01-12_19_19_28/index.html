@@ -67,10 +67,11 @@
             width: 100%;
         }
 
-        /* Ensure hero headings and paragraphs wrap gracefully on small screens. */
+        /* Ensure hero headings and paragraphs wrap without breaking words mid-line. */
         .hero-bg h1, .hero-bg p {
-            overflow-wrap: anywhere;
-            word-break: break-word;
+            overflow-wrap: normal;
+            word-break: normal;
+            hyphens: auto;
         }
         .fade-in {
             opacity: 0;
@@ -265,10 +266,16 @@ a:focus-visible, button:focus-visible{
   .hero-bg h1{
     font-size: 1.75rem !important; /* around text-2xl */
     line-height: 2.25rem !important;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: auto;
   }
   .hero-bg p{
     font-size: 1rem !important;
     line-height: 1.5rem !important;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: auto;
   }
 
   /* Reduce vertical spacing within hero on very small screens */
